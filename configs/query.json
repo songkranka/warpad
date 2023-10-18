@@ -1,0 +1,990 @@
+{
+    "QueryConfig": [
+        {
+            "TopicName": "GetTotalBranchActive",
+            "Query": [
+                "WITH SET_BRN_ALL AS (",
+                "SELECT BA.BRN_CODE AS BranchId, BA.BRN_NAME AS BranchName, '' AS OpenBranch, '' AS CloseBranch",
+                "FROM MAS_BRANCH BA",
+                "INNER JOIN MAS_BRANCH_CODE_MAPPING BM ON BA.BRN_CODE = BM.ORG_CODEDEV",
+                "INNER JOIN MAS_SAP_PLANT MS ON BM.MP_PLANT = MS.PLANT",
+                "WHERE MS.SRC_NAME = 'PTC' AND (BRN_NAME LIKE 'สถานีบริการ%' OR BRN_NAME LIKE 'สถานีแก๊ส%')",
+                "UNION",
+                "SELECT BA.BRN_CODE AS BranchId, BA.BRN_NAME AS BranchName, '' AS OpenBranch, '' AS CloseBranch",
+                "FROM MAS_BRANCH BA",
+                "INNER JOIN MAS_BRANCH_CODE_MAPPING BM ON BA.BRN_CODE = BM.ORG_CODEDEV",
+                "INNER JOIN MAS_SAP_PLANT MS ON BM.ORG_CODE = MS.LEG_CODE",
+                "WHERE MS.SRC_NAME = 'PTC' AND (BRN_NAME LIKE 'สถานีบริการ%' OR BRN_NAME LIKE 'สถานีแก๊ส%'))",
+                "SELECT COUNT(1) AS Total FROM SET_BRN_ALL",
+                "WHERE BranchName LIKE :KEY_SEARCH"
+            ]
+        },
+        {
+            "TopicName": "GetBranchActiveList",
+            "Query": [
+                "WITH SET_BRN_ALL AS (",
+                "SELECT BA.BRN_CODE AS BranchId, BA.BRN_NAME AS BranchName, '' AS OpenBranch, '' AS CloseBranch",
+                "FROM MAS_BRANCH BA",
+                "INNER JOIN MAS_BRANCH_CODE_MAPPING BM ON BA.BRN_CODE = BM.ORG_CODEDEV",
+                "INNER JOIN MAS_SAP_PLANT MS ON BM.MP_PLANT = MS.PLANT",
+                "WHERE MS.SRC_NAME = 'PTC' AND (BRN_NAME LIKE 'สถานีบริการ%' OR BRN_NAME LIKE 'สถานีแก๊ส%')",
+                "UNION",
+                "SELECT BA.BRN_CODE AS BranchId, BA.BRN_NAME AS BranchName, '' AS OpenBranch, '' AS CloseBranch",
+                "FROM MAS_BRANCH BA",
+                "INNER JOIN MAS_BRANCH_CODE_MAPPING BM ON BA.BRN_CODE = BM.ORG_CODEDEV",
+                "INNER JOIN MAS_SAP_PLANT MS ON BM.ORG_CODE = MS.LEG_CODE",
+                "WHERE MS.SRC_NAME = 'PTC' AND (BRN_NAME LIKE 'สถานีบริการ%' OR BRN_NAME LIKE 'สถานีแก๊ส%'))",
+                "SELECT * FROM SET_BRN_ALL",
+                "WHERE BranchName LIKE :KEY_SEARCH",
+                "ORDER BY 1 OFFSET (:PAGE_NO - 1) * :LIMIT ROWS FETCH NEXT :LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName": "GetBranchActive",
+            "Query": [
+                "select * from MAS_BRANCH_ACTIVE where BRN_CODE = @BRN_CODE"
+            ]
+        },
+        {
+            "TopicName": "AddBranchActive",
+            "Query": [
+                "INSERT INTO MAS_BRANCH_ACTIVE (BRN_CODE, BRN_NAME, ACTIVE, CREATED_DATE, CREATED_BY)",
+                "SELECT BRN_CODE, BRN_NAME, 1 AS ACTIVE, CONVERT(varchar,dateadd(HOUR, 7, getdate()),21), 'SYS' AS CREATED_BY FROM MAS_BRANCH WHERE BRN_CODE = @BRN_CODE"
+            ]
+        },
+        {
+            "TopicName": "UpdateBranchActive",
+            "Query": [
+                "update MAS_BRANCH_ACTIVE set BRN_NAME = @BRN_NAME where BRN_CODE = @BRN_CODE"
+            ]
+        },
+        {
+            "TopicName": "GetTotalBranch",
+            "Query": [
+                "SELECT COUNT(1) AS Total FROM MAS_BRANCH"
+            ]
+        },
+        {
+            "TopicName": "GetBranchList",
+            "Query": [
+                "SELECT BRN_CODE AS BranchId, BRN_NAME AS BranchName, '' AS OpenBranch, '' AS CloseBranch FROM MAS_BRANCH",
+                "ORDER BY 1 OFFSET (@PAGE_NO - 1) * @LIMIT ROWS FETCH NEXT @LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName": "GetTotalBranchBU",
+            "Query": [
+                "SELECT DISTINCT COUNT(1) AS Total",
+                "FROM [dbo].[MAS_EMPLOYEE_SPLITTER]",
+                "WHERE COMPANYCODE_LEVEL1 LIKE @KEYWORD OR COMPANYNAME_LEVEL1 LIKE @KEYWORD",
+                "ORDER BY COMPANYNAME_LEVEL1"
+            ]
+        },
+        {
+            "TopicName": "GetBranchBUList",
+            "Query": [
+                "SELECT DISTINCT COMPANYCODE_LEVEL1 AS CompanyCode, COMPANYNAME_LEVEL1 AS CompanyName",
+                "FROM [dbo].[MAS_EMPLOYEE_SPLITTER]",
+                "WHERE COMPANYCODE_LEVEL1 LIKE @KEYWORD OR COMPANYNAME_LEVEL1 LIKE @KEYWORD"
+            ]
+        },
+        {
+            "TopicName": "GetTotalBranchArea",
+            "Query": [
+                "SELECT DISTINCT COUNT(1) AS Total",
+                "FROM [dbo].[MAS_EMPLOYEE_SPLITTER]",
+                "WHERE COMPANYCODE_LEVEL2 IS NOT NULL",
+                "AND (COMPANYCODE_LEVEL2 LIKE @KEYWORD OR COMPANYNAME_LEVEL2 LIKE @KEYWORD )"
+            ]
+        },
+        {
+            "TopicName": "GetBranchAreaList",
+            "Query": [
+                "SELECT DISTINCT MP.COMPANYCODE_LEVEL5 AS AreaCode, MP.COMPANYNAME_LEVEL5 AS AreaName",
+                "FROM MAS_BRANCH_PROFILE MP",
+                "INNER JOIN MAS_EMPLOYEE_SPLITTER MS ON MP.COMPANYCODE_LEVEL7 = MS.BRANCH_CODE",
+                "AND  (COMPANYCODE_LEVEL5 LIKE @KEYWORD OR COMPANYNAME_LEVEL5 LIKE @KEYWORD )",
+                "ORDER BY COMPANYCODE_LEVEL5"
+            ]
+        },
+        {
+            "TopicName": "GetTotalBranchProvince",
+            "Query": [
+                "SELECT DISTINCT COUNT(1) AS Total",
+                "FROM [dbo].[MAS_EMPLOYEE_SPLITTER]",
+                "WHERE COMPANYCODE_LEVEL4 IS NOT NULL",
+                "AND COMPANYCODE_LEVEL4 <> '0390'",
+                "AND  (COMPANYCODE_LEVEL4 LIKE @KEYWORD OR COMPANYNAME_LEVEL4 LIKE @KEYWORD )"
+            ]
+        },
+        {
+            "TopicName": "GetBranchProvinceList",
+            "Query": [
+                "SELECT DISTINCT COMPANYCODE_LEVEL4 AS ProvinceCode, COMPANYNAME_LEVEL4 AS ProvinceName",
+                "FROM [dbo].[MAS_EMPLOYEE_SPLITTER]",
+                "WHERE COMPANYCODE_LEVEL4 IS NOT NULL",
+                "AND COMPANYCODE_LEVEL4 <> '0390'",
+                "AND  (COMPANYCODE_LEVEL4 LIKE @KEYWORD OR COMPANYNAME_LEVEL4 LIKE @KEYWORD )",
+                "ORDER BY COMPANYNAME_LEVEL4"
+            ]
+        },
+        {
+            "TopicName": "GetTotalBranchSOM",
+            "Query": [
+                "SELECT DISTINCT COUNT(1) AS Total",
+                "FROM [dbo].[MAS_EMPLOYEE_SPLITTER]",
+                "WHERE COMPANYCODE_LEVEL4 IS NOT NULL",
+                "AND LOC_CODE <> '0390' AND BRN_CODE  IS NOT NULL",
+                "AND  (BRN_CODE LIKE @KEYWORD OR BRN_NAME LIKE @KEYWORD )"
+            ]
+        },
+        {
+            "TopicName": "GetBranchSOMList",
+            "Query": [
+                "SELECT DISTINCT BRANCH_CODE AS BranchCode, BRANCH_NAME AS BranchName",
+                "FROM [dbo].[MAS_EMPLOYEE_SPLITTER]",
+                "WHERE COMPANYCODE_LEVEL4 IS NOT NULL",
+                "AND LOC_CODE <> '0390' AND BRANCH_CODE  IS NOT NULL",
+                "AND  (BRANCH_CODE LIKE @KEYWORD OR BRANCH_NAME LIKE @KEYWORD )",
+                "ORDER BY BRANCH_CODE, BRANCH_NAME"
+            ]
+        },
+        {
+            "TopicName": "SearchBranchTotal",
+            "Query": [
+                "SELECT COUNT(*) AS Total  FROM MAS_BRANCH_ACTIVE",
+                "WHERE BRN_NAME LIKE :BRANNAME_SEARCH"
+            ]
+        },
+        {
+            "TopicName": "SearchBranch",
+            "Query": [
+                "SELECT BRN_CODE AS BranchId, BRN_NAME AS BranchName FROM MAS_BRANCH_ACTIVE",
+                "WHERE BRN_NAME LIKE :BRANNAME_SEARCH",
+                "ORDER BY 1 OFFSET (:PAGE_NO - 1) * :LIMIT ROWS FETCH NEXT :LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName": "GetBranchManager",
+            "Query": [
+                "SELECT DISTINCT MS.BRANCH_CODE AS DEPT_CODE, MS.BRANCH_NAME AS DEPT_NAME_TH, MS.EMP_ID, MS.EMP_FULLNAME_TH, MS.POS_CODE, MS.POS_NAME_TH",
+                "FROM MAS_EMPLOYEE_SPLITTER MS",
+                "INNER JOIN MAS_BRANCH_CODE_MAPPING MG ON MS.LEG_CODE = MG.ORG_CODE",
+                "LEFT JOIN MAS_EMPLOYEE_LEAVE ML",
+                "ON MG.ORG_CODEDEV = ML.BRANCH_CODE AND MS.EMP_ID = ML.EMP_ID",
+                "AND ML.LEAVE_DATE = CONVERT(VARCHAR,DATEADD(HOUR, 7, GETDATE()),112)",
+                "WHERE (LEG_CODE = SUBSTRING(@KEY_SEARCH, 3, 5) OR ",
+                "MS.PLANT_CODE = @KEY_SEARCH OR",
+                "MS.COMPANYCODE_LEVEL1 = @KEY_SEARCH OR ",
+                "MS.COMPANYCODE_LEVEL4 = @KEY_SEARCH OR ",
+                "MS.LOC_CODE = @KEY_SEARCH OR ",
+                "MG.ORG_CODEDEV = @KEY_SEARCH) ",
+                "AND MS.BRANCH_CODE IS NOT NULL OR ('ALL' = @KEY_SEARCH)",
+                "AND (ML.BRANCH_CODE IS NULL AND ML.EMP_ID IS NULL)"
+            ]
+        },
+        {
+            "TopicName": "GetBranchEmployee",
+            "Query": [
+                "SELECT BRANCH_CODE AS BranchCode, BRANCH_NAME AS BranchName",
+                "FROM MAS_EMPLOYEE_SPLITTER WHERE EMP_ID = :EMP_ID"
+            ]
+        },
+        {
+            "TopicName": "GetBranchExist",
+            "Query": [
+                "SELECT COUNT(1) AS BRANCH_EXIST FROM MAS_BRANCH_ACTIVE WHERE BRN_CODE = @BRN_CODE"
+            ]
+        },
+        {
+            "TopicName": "GetTotalPosList",
+            "Query": [
+                "SELECT COUNT(1) AS Total FROM MAS_EMPLOYEE_POS"
+            ]
+        },
+        {
+            "TopicName": "GetPosList",
+            "Query": [
+                "SELECT POS_CODE AS PositionId, NAME_TH AS PositionName FROM MAS_EMPLOYEE_POS ORDER BY 1 OFFSET (@PAGE_NO - 1) * @LIMIT ROWS FETCH NEXT @LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName": "SearchPosTotal",
+            "Query": [
+                "SELECT COUNT(*) AS Total  FROM MAS_EMPLOYEE_POS",
+                "WHERE (POS_CODE LIKE :POS_SEARCH OR NAME_EN LIKE :POS_SEARCH OR NAME_TH LIKE :POS_SEARCH) "
+            ]
+        },
+        {
+            "TopicName": "SearchPos",
+            "Query": [
+                "SELECT POS_CODE AS PositionId, NAME_TH AS PositionName FROM MAS_EMPLOYEE_POS ",
+                "WHERE (POS_CODE LIKE :POS_SEARCH OR NAME_EN LIKE :POS_SEARCH OR NAME_TH LIKE :POS_SEARCH) ",
+                "ORDER BY 1 OFFSET (:PAGE_NO - 1) * :LIMIT ROWS FETCH NEXT :LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName": "GetRoleList",
+            "Query": [
+                "select * from MAS_EMPLOYEE_ROLE ORDER BY 1 OFFSET (@PAGE_NO - 1) * @LIMIT ROWS FETCH NEXT @LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName": "GetRole",
+            "Query": [
+                "select * from MAS_EMPLOYEE_ROLE where ROLE_CODE = @ROLE_CODE"
+            ]
+        },
+        {
+            "TopicName": "AddEmpRole",
+            "Query": [
+                "insert into MAS_EMPLOYEE_ROLE (ROLE_CODE,ROLE_NAME,ACTIVE,CREATED_DATE,CREATED_BY) values (@ROLE_CODE,@ROLE_NAME,@ACTIVE,CONVERT(varchar,dateadd(HOUR, 7, getdate()),21),@CREATED_BY)"
+            ]
+        },
+        {
+            "TopicName": "UpdateEmpRole",
+            "Query": [
+                "update MAS_EMPLOYEE_ROLE set ROLE_NAME = @ROLE_NAME, ACTIVE = @ACTIVE, UPDATED_DATE = CONVERT(varchar,dateadd(HOUR, 7, getdate()),21), UPDATED_BY = @UPDATED_BY where ROLE_CODE = @ROLE_CODE"
+            ]
+        },
+        {
+            "TopicName": "GetTotalEmp",
+            "Query": [
+                "SELECT COUNT(1) AS Total FROM MAS_EMPLOYEE"
+            ]
+        },
+        {
+            "TopicName": "GetEmpList",
+            "Query": [
+                "SELECT EMP_ID as UserId, EMP_FULLNAME_TH as Username, POS_NAME_TH as Position, DEPT_NAME_TH as Location from MAS_EMPLOYEE ORDER BY 1 OFFSET (@PAGE_NO - 1) * @LIMIT ROWS FETCH NEXT @LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName": "SearchEmp",
+            "Query": [
+                "SELECT TOP 50 EMP_ID, EMP_FULLNAME_TH, POS_NAME_TH, DEPT_NAME_TH from MAS_EMPLOYEE",
+                "WHERE EMP_ID LIKE @KEYWORD OR EMP_FULLNAME_TH LIKE @KEYWORD ORDER BY EMP_FULLNAME_TH ASC"
+            ]
+        },
+        {
+            "TopicName": "GetEmp",
+            "Query": [
+                "SELECT E.EMP_ID as UserId, E.EMP_FULLNAME_TH as Username,",
+                "E.POS_NAME_TH as Position, E.DEPT_NAME_TH as Location, E.JOB_TITLE as JobTitle,",
+                "P.MAXLVL as Level",
+                "FROM MAS_EMPLOYEE E",
+                "INNER JOIN MAS_EMPLOYEE_POS P",
+                "ON E.POS_CODE = P.POS_CODE",
+                "WHERE EMP_ID = @EMP_ID"
+            ]
+        },
+        {
+            "TopicName": "GetVersion",
+            "Query": [
+                "SELECT [VERSION] FROM MAS_API_VERSION"
+            ]
+        },
+        {
+            "TopicName": "SearchEmployeeTotal",
+            "Query": [
+                "SELECT COUNT(*) AS Total  FROM MAS_EMPLOYEE",
+                "WHERE (EMP_ID LIKE :EMP_SEARCH OR EMP_FULLNAME_TH LIKE :EMP_SEARCH OR POS_NAME_TH LIKE :EMP_SEARCH OR DEPT_NAME_TH LIKE :EMP_SEARCH)"
+            ]
+        },
+        {
+            "TopicName": "SearchEmployee",
+            "Query": [
+                "SELECT EMP_ID as UserId, EMP_FULLNAME_TH as Username, POS_NAME_TH as Position, DEPT_NAME_TH as Location ",
+                "FROM MAS_EMPLOYEE",
+                "WHERE (EMP_ID LIKE :EMP_SEARCH OR EMP_FULLNAME_TH LIKE :EMP_SEARCH OR POS_NAME_TH LIKE :EMP_SEARCH OR DEPT_NAME_TH LIKE :EMP_SEARCH)",
+                "ORDER BY 1 OFFSET (:PAGE_NO - 1) * :LIMIT ROWS FETCH NEXT :LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName": "GetMenuRoleList",
+            "Query": [
+                "select * from MAS_MENU_ROLE ORDER BY 1 OFFSET (@PAGE_NO - 1) * @LIMIT ROWS FETCH NEXT @LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName": "GetMenuRole",
+            "Query": [
+                "select * from MAS_MENU_ROLE where MENU_CODE = @MENU_CODE"
+            ]
+        },
+        {
+            "TopicName": "AddMenuRole",
+            "Query": [
+                "insert into MAS_MENU_ROLE (MENU_CODE,ROLE_CODE,CREATED_DATE,CREATED_BY,UPDATED_DATE,UPDATED_BY) values (@MENU_CODE,@ROLE_CODE,CONVERT(varchar,dateadd(HOUR, 7, getdate()),21),@CREATED_BY,@UPDATED_DATE,@UPDATED_BY)"
+            ]
+        },
+        {
+            "TopicName": "UpdateMenuRole",
+            "Query": [
+                "update MAS_MENU_ROLE set ROLE_CODE = @ROLE_CODE where MENU_CODE = @MENU_CODE"
+            ]
+        },
+        {
+            "TopicName": "GetMenuList",
+            "Query": [
+                "SELECT mgm.GROUP_MENU_CODE, mgm.GROUP_NAME, mgm.GROUP_MENU_ICON, menu.MENU_CODE, menu.MENU_NAME, menu.MENU_LINK, menu.MENU_ICON, menu.ACTIVE, convert(varchar, menu.CREATED_DATE, 105) AS CREATED_DATE FROM MAS_GROUP_MENU mgm RIGHT JOIN MAS_MENU menu ON menu.GROUP_MENU_CODE = mgm.GROUP_MENU_CODE ORDER BY 1 OFFSET @PAGE_NO ROWS FETCH NEXT @LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName": "GetMenuListCount",
+            "Query": [
+                "SELECT COUNT(*) AS Total FROM MAS_GROUP_MENU mgm RIGHT JOIN MAS_MENU menu ON menu.GROUP_MENU_CODE = mgm.GROUP_MENU_CODE"
+            ]
+        },
+        {
+            "TopicName": "GetMenu",
+            "Query": [
+                "select * from MAS_MENU where MENU_CODE = @MENU_CODE"
+            ]
+        },
+        {
+            "TopicName": "AddMenu",
+            "Query": [
+                "insert into MAS_MENU (MENU_CODE,MENU_NAME,MENU_LINK,ACTIVE,CREATED_DATE,CREATED_BY,MENU_ICON,GROUP_MENU_CODE) values (@MENU_CODE,@MENU_NAME,@MENU_LINK,@ACTIVE,CONVERT(varchar,dateadd(HOUR, 7, getdate()),21),@CREATED_BY,@MENU_ICON,@GROUP_MENU_CODE)"
+            ]
+        },
+        {
+            "TopicName": "UpdateMenu",
+            "Query": [
+                "UPDATE MAS_MENU SET MENU_NAME = @MENU_NAME WHERE MENU_CODE = @MENU_CODE"
+            ]
+        },
+        {
+            "TopicName": "AddGroupMenu",
+            "Query": [
+                "insert into MAS_GROUP_MENU (GROUP_NAME,GROUP_MENU_ICON) values (@GROUP_NAME,@GROUP_MENU_ICON)"
+            ]
+        },
+        {
+            "TopicName": "UpdateGroupMenu",
+            "Query": [
+                "UPDATE MAS_GROUP_MENU SET GROUP_NAME = @GROUP_NAME, GROUP_MENU_ICON = @GROUP_MENU_ICON WHERE GROUP_MENU_CODE = @GROUP_MENU_CODE"
+            ]
+        },
+        {
+            "TopicName": "GetTotalTaskCat",
+            "Query": [
+                "SELECT COUNT(1) AS Total FROM MAS_TASK_CATEGORY",
+                "WHERE ACTIVE IN (1, 0) AND CAT_CODE <> 'ACD1001'"
+            ]
+        },
+        {
+            "TopicName": "GetTaskCatList",
+            "Query": [
+                "SELECT CAT_CODE AS CategoryId, CAT_NAME AS CategoryName, ACTIVE AS Status, FORMAT(CREATED_DATE, 'yyyy/MM/dd') AS CreateDate",
+                "FROM MAS_TASK_CATEGORY",
+                "WHERE ACTIVE IN (1, 0) AND CAT_CODE <> 'ACD1001'"
+            ]
+        },
+        {
+            "TopicName": "GetTotalTaskCatAcademy",
+            "Query": [
+                "SELECT COUNT(1) AS Total FROM MAS_TASK_CATEGORY",
+                "WHERE ACTIVE IN (1, 0) AND CAT_CODE = 'ACD1001'"
+            ]
+        },
+        {
+            "TopicName": "GetTaskCatListAcademy",
+            "Query": [
+                "SELECT CAT_CODE AS CategoryId, CAT_NAME AS CategoryName, ACTIVE AS Status, FORMAT(CREATED_DATE, 'yyyy/MM/dd') AS CreateDate",
+                "FROM MAS_TASK_CATEGORY",
+                "WHERE ACTIVE IN (1, 0) AND CAT_CODE = 'ACD1001'"
+            ]
+        },
+        {
+            "TopicName": "GetTotalTaskCatLimit",
+            "Query": [
+                "SELECT COUNT(1) AS Total FROM MAS_TASK_CATEGORY",
+                "WHERE ACTIVE IN (1, 0)"
+            ]
+        },
+        {
+            "TopicName": "GetTaskCatListLimit",
+            "Query": [
+                "SELECT CAT_CODE AS CategoryId, CAT_NAME AS CategoryName, ACTIVE AS Status, FORMAT(CREATED_DATE, 'yyyy/MM/dd') AS CreateDate",
+                "FROM MAS_TASK_CATEGORY",
+                "WHERE ACTIVE IN (1, 0)",
+                "ORDER BY 1 OFFSET (:PAGE_NO - 1) * :LIMIT ROWS FETCH NEXT :LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName": "GetTaskCat",
+            "Query": [
+                "SELECT CAT_CODE AS CategoryId, CAT_NAME AS CategoryName, ACTIVE AS Status, FORMAT(CREATED_DATE, 'yyyy/MM/dd') AS CreateDate",
+                "FROM MAS_TASK_CATEGORY",
+                "WHERE CAT_CODE = @CAT_CODE",
+                "AND ACTIVE IN (1, 0)"
+            ]
+        },
+        {
+            "TopicName": "SearchTaskCatTotal",
+            "Query": [
+                "SELECT COUNT(*) AS Total  FROM MAS_TASK_CATEGORY",
+                "WHERE ACTIVE IN (1, 0) AND (CAT_CODE LIKE :CAT_SEARCH OR CAT_NAME LIKE :CAT_SEARCH) "
+            ]
+        },
+        {
+            "TopicName": "SearchTaskCat",
+            "Query": [
+                "SELECT CAT_CODE AS CategoryId, CAT_NAME AS CategoryName, ACTIVE AS Status, FORMAT(CREATED_DATE, 'yyyy/MM/dd') AS CreateDate",
+                "FROM MAS_TASK_CATEGORY",
+                "WHERE ACTIVE IN (1, 0) AND (CAT_CODE LIKE :CAT_SEARCH OR CAT_NAME LIKE :CAT_SEARCH) ",
+                "ORDER BY 1 OFFSET (:PAGE_NO - 1) * :LIMIT ROWS FETCH NEXT :LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName": "AddTaskCategory",
+            "Query": [
+                "INSERT INTO MAS_TASK_CATEGORY (CAT_CODE,CAT_NAME,ACTIVE,CREATED_DATE,CREATED_BY,UPDATED_DATE,UPDATED_BY)",
+                "VALUES (@CAT_CODE,@CAT_NAME,@ACTIVE,CONVERT(varchar,dateadd(HOUR, 7, getdate()),21),@CREATED_BY,@UPDATED_DATE,@UPDATED_BY)"
+            ]
+        },
+        {
+            "TopicName": "UpdateTaskCategory",
+            "Query": [
+                "UPDATE MAS_TASK_CATEGORY",
+                "SET CAT_NAME = @CAT_NAME",
+                ",ACTIVE = @ACTIVE",
+                ",UPDATED_DATE = CONVERT(varchar,dateadd(HOUR, 7, getdate()),21)",
+                ",UPDATED_BY = @UPDATED_BY",
+                "WHERE CAT_CODE = @CAT_CODE"
+            ]
+        },
+        {
+            "TopicName": "UpdateTaskCatToDeleteStatus",
+            "Query": [
+                "UPDATE MAS_TASK_CATEGORY",
+                "SET ACTIVE = 9",
+                ",UPDATED_DATE = CONVERT(varchar,dateadd(HOUR, 7, getdate()),21)",
+                ",UPDATED_BY = @UPDATED_BY",
+                "WHERE CAT_CODE = @CAT_CODE"
+            ]
+        },
+        {
+            "TopicName": "GetTotalTaskSubCatLimit",
+            "Query": [
+                "SELECT COUNT(1) AS Total FROM MAS_TASK_SUB_CATEGORY",
+                "WHERE ACTIVE IN (1, 0)"
+            ]
+        },
+        {
+            "TopicName": "GetTaskSubCatListLimit",
+            "Query": [
+                "SELECT SUB_CAT_CODE AS SubCategoryId, CAT_CODE AS CategoryId, TYPE_NAME AS TypeName, ACTIVE AS Status, FORMAT(CREATED_DATE, 'yyyy/MM/dd') AS CreateDate, IS_SPECIAL AS IsSpecial, IS_CAL AS IsCal, TASK_TYPE AS TaskType",
+                "FROM MAS_TASK_SUB_CATEGORY",
+                "WHERE ACTIVE IN (1, 0)",
+                "ORDER BY 1 OFFSET (:PAGE_NO - 1) * :LIMIT ROWS FETCH NEXT :LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName": "GetTotalTaskSubCat",
+            "Query": [
+                "SELECT COUNT(1) AS Total FROM MAS_TASK_SUB_CATEGORY",
+                "WHERE ACTIVE IN (1, 0) AND CAT_CODE <> 'ACD1001'"
+            ]
+        },
+        {
+            "TopicName": "GetTaskSubCatList",
+            "Query": [
+                "SELECT SUB_CAT_CODE AS SubCategoryId, CAT_CODE AS CategoryId, TYPE_NAME AS TypeName, ACTIVE AS Status, FORMAT(CREATED_DATE, 'yyyy/MM/dd') AS CreateDate, IS_SPECIAL AS IsSpecial, IS_CAL AS IsCal, TASK_TYPE AS TaskType",
+                "FROM MAS_TASK_SUB_CATEGORY",
+                "WHERE ACTIVE IN (1, 0) AND CAT_CODE <> 'ACD1001'"
+            ]
+        },
+        {
+            "TopicName": "GetTotalTaskSubCatAcademy",
+            "Query": [
+                "SELECT COUNT(1) AS Total FROM MAS_TASK_SUB_CATEGORY",
+                "WHERE ACTIVE IN (1, 0) AND CAT_CODE = 'ACD1001'"
+            ]
+        },
+        {
+            "TopicName": "GetTaskSubCatListAcademy",
+            "Query": [
+                "SELECT SUB_CAT_CODE AS SubCategoryId, CAT_CODE AS CategoryId, TYPE_NAME AS TypeName, ACTIVE AS Status, FORMAT(CREATED_DATE, 'yyyy/MM/dd') AS CreateDate, IS_SPECIAL AS IsSpecial, IS_CAL AS IsCal, TASK_TYPE AS TaskType",
+                "FROM MAS_TASK_SUB_CATEGORY",
+                "WHERE ACTIVE IN (1, 0) AND CAT_CODE = 'ACD1001'"
+            ]
+        },
+        {
+            "TopicName": "GetTaskSubCat",
+            "Query": [
+                "SELECT SUB_CAT_CODE AS SubCategoryId, CAT_CODE AS CategoryId, TYPE_NAME AS TypeName, ACTIVE AS Status, FORMAT(CREATED_DATE, 'yyyy/MM/dd') AS CreateDate, IS_SPECIAL AS IsSpecial, IS_CAL AS IsCal, TASK_TYPE AS TaskType",
+                "FROM MAS_TASK_SUB_CATEGORY",
+                "WHERE SUB_CAT_CODE = @SUB_CAT_CODE AND CAT_CODE = @CAT_CODE",
+                "AND ACTIVE IN (1, 0)"
+            ]
+        },
+        {
+            "TopicName": "GetTaskSubCatForDashboard",
+            "Query": [
+                "SELECT CAT_CODE, SUB_CAT_CODE, TYPE_DESC",
+                "FROM MAS_TASK_SUB_CATEGORY",
+                "WHERE SUB_CAT_CODE IN ('TDL1001-01', 'WST1001-02', 'WST1001-04' )",
+                "UNION",
+                "SELECT DISTINCT CAT_CODE, NULL AS SUB_CAT_CODE, TYPE_DESC",
+                "FROM MAS_TASK_SUB_CATEGORY",
+                "WHERE CAT_CODE = 'VRM1001'"
+            ]
+        },
+        {
+            "TopicName": "SearchTaskSubCatTotal",
+            "Query": [
+                "SELECT COUNT(*) AS Total  FROM MAS_TASK_SUB_CATEGORY",
+                "WHERE ACTIVE IN (1, 0) AND (SUB_CAT_CODE LIKE :SUB_CAT_SEARCH OR TYPE_NAME LIKE :SUB_CAT_SEARCH) "
+            ]
+        },
+        {
+            "TopicName": "SearchTaskSubCat",
+            "Query": [
+                "SELECT SUB_CAT_CODE AS SubCategoryId, CAT_CODE AS CategoryId, TYPE_NAME AS TypeName, ACTIVE AS Status, FORMAT(CREATED_DATE, 'yyyy/MM/dd') AS CreateDate, IS_SPECIAL AS IsSpecial",
+                "FROM MAS_TASK_SUB_CATEGORY",
+                "WHERE ACTIVE IN (1, 0) AND (SUB_CAT_CODE LIKE :SUB_CAT_SEARCH OR TYPE_NAME LIKE :SUB_CAT_SEARCH) ",
+                "ORDER BY 1 OFFSET (:PAGE_NO - 1) * :LIMIT ROWS FETCH NEXT :LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName": "AddTaskSubCategory",
+            "Query": [
+                "INSERT INTO MAS_TASK_SUB_CATEGORY (SUB_CAT_CODE,CAT_CODE,TYPE_NAME,ACTIVE,CREATED_DATE,CREATED_BY,UPDATED_DATE,UPDATED_BY,IS_SPECIAL,IS_CAL,TASK_TYPE)",
+                "VALUES (@SUB_CAT_CODE,@CAT_CODE,@TYPE_NAME,@ACTIVE,CONVERT(varchar,dateadd(HOUR, 7, getdate()),21),@CREATED_BY,@UPDATED_DATE,@UPDATED_BY,@IS_SPECIAL,@IS_CAL,@TASK_TYPE)"
+            ]
+        },
+        {
+            "TopicName": "UpdateTaskSubCategory",
+            "Query": [
+                "UPDATE MAS_TASK_SUB_CATEGORY",
+                "SET TYPE_NAME = @TYPE_NAME",
+                ",ACTIVE = @ACTIVE",
+                ",UPDATED_DATE = CONVERT(varchar,dateadd(HOUR, 7, getdate()),21)",
+                ",UPDATED_BY = @UPDATED_BY",
+                ",IS_SPECIAL = @IS_SPECIAL",
+                ",IS_CAL = @IS_CAL",
+                ",TASK_TYPE = @TASK_TYPE",
+                "WHERE SUB_CAT_CODE = @SUB_CAT_CODE",
+                "AND CAT_CODE = @CAT_CODE"
+            ]
+        },
+        {
+            "TopicName": "UpdateTaskSubCatToDeleteStatus",
+            "Query": [
+                "UPDATE MAS_TASK_SUB_CATEGORY",
+                "SET ACTIVE = 9",
+                ",UPDATED_DATE = CONVERT(varchar,dateadd(HOUR, 7, getdate()),21)",
+                ",UPDATED_BY = @UPDATED_BY",
+                "WHERE SUB_CAT_CODE = @SUB_CAT_CODE",
+                "AND CAT_CODE = @CAT_CODE"
+            ]
+        },
+        {
+            "TopicName": "GetTotalSLA",
+            "Query": [
+                "SELECT COUNT(1) AS Total FROM MAS_SLA_CONFIG",
+                "WHERE ACTIVE IN (1, 0)"
+            ]
+        },
+        {
+            "TopicName": "GetSLAList",
+            "Query": [
+                "SELECT SLA_CODE AS SlaId, SLA_NAME AS SlaName, ADD_TIME AS SlaTime, ACTIVE AS Status, FORMAT(CREATED_DATE, 'yyyy/MM/dd') AS CreateDate",
+                "FROM MAS_SLA_CONFIG",
+                "WHERE ACTIVE IN (1, 0)",
+                "ORDER BY 1 OFFSET (@PAGE_NO - 1) * @LIMIT ROWS FETCH NEXT @LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName": "GetSLA",
+            "Query": [
+                "SELECT SLA_CODE AS SlaId, SLA_NAME AS SlaName, ADD_TIME AS SlaTime, ACTIVE AS Status, FORMAT(CREATED_DATE, 'yyyy/MM/dd') AS CreateDate",
+                "FROM MAS_SLA_CONFIG",
+                "WHERE ACTIVE IN (1, 0)",
+                "AND SLA_CODE = @SLA_CODE"
+            ]
+        },
+        {
+            "TopicName": "GetBatchSLA",
+            "Query": [
+                "SELECT SUB_CAT_CODE, CAT_CODE, BATCH_NAME, BATCH_GROUP_NAME, SLA_CODE",
+                "FROM MAS_BATCH_CATEGORY"
+            ]
+        },
+        {
+            "TopicName": "SearchSLATotal",
+            "Query": [
+                "SELECT COUNT(*) AS Total  FROM MAS_SLA_CONFIG",
+                "WHERE ACTIVE IN (1, 0) AND (SLA_CODE LIKE :SLA_SEARCH OR SLA_NAME LIKE :SLA_SEARCH OR ADD_TIME LIKE :SLA_SEARCH) "
+            ]
+        },
+        {
+            "TopicName": "SearchSLA",
+            "Query": [
+                "SELECT SLA_CODE AS SlaId, SLA_NAME AS SlaName, ADD_TIME AS SlaTime, ACTIVE AS Status, FORMAT(CREATED_DATE, 'yyyy/MM/dd') AS CreateDate",
+                "FROM MAS_SLA_CONFIG",
+                "WHERE ACTIVE IN (1, 0) AND (SLA_CODE LIKE :SLA_SEARCH OR SLA_NAME LIKE :SLA_SEARCH OR ADD_TIME LIKE :SLA_SEARCH) ",
+                "ORDER BY 1 OFFSET (:PAGE_NO - 1) * :LIMIT ROWS FETCH NEXT :LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName": "AddSLA",
+            "Query": [
+                "INSERT INTO MAS_SLA_CONFIG (SLA_CODE,SLA_NAME,ADD_TIME,ACTIVE,CREATED_DATE,CREATED_BY,UPDATED_DATE,UPDATED_BY)",
+                "VALUES (@SLA_CODE,@SLA_NAME,@ADD_TIME,@ACTIVE,CONVERT(varchar,dateadd(HOUR, 7, getdate()),21),@CREATED_BY,@UPDATED_DATE,@UPDATED_BY)"
+            ]
+        },
+        {
+            "TopicName": "UpdateSLA",
+            "Query": [
+                "UPDATE MAS_SLA_CONFIG",
+                "SET SLA_NAME = @SLA_NAME",
+                ",ADD_TIME = @ADD_TIME",
+                ",ACTIVE = @ACTIVE",
+                ",UPDATED_DATE = CONVERT(varchar,dateadd(HOUR, 7, getdate()),21)",
+                ",UPDATED_BY = @UPDATED_BY",
+                "WHERE SLA_CODE = @SLA_CODE"
+            ]
+        },
+        {
+            "TopicName": "UpdateSLAtoDeleteStatus",
+            "Query": [
+                "UPDATE MAS_SLA_CONFIG",
+                "SET ACTIVE = 9",
+                ",UPDATED_DATE = CONVERT(varchar,dateadd(HOUR, 7, getdate()),21)",
+                ",UPDATED_BY = @UPDATED_BY",
+                "WHERE SLA_CODE = @SLA_CODE"
+            ]
+        },
+        {
+            "TopicName": "AddUserToken",
+            "Query": [
+                "IF EXISTS (SELECT * FROM MAS_EMPLOYEE_LINE_TOKEN WHERE EMP_ID = @EMP_ID AND SOURCE = @SOURCE)",
+                "UPDATE MAS_EMPLOYEE_LINE_TOKEN SET TOKEN_ID = @TOKEN_ID, ACTIVE = @ACTIVE, UPDATED_DATE = CONVERT(varchar,dateadd(HOUR, 7, getdate()),21), UPDATED_BY = @UPDATED_BY",
+                "WHERE EMP_ID = @EMP_ID AND SOURCE = @SOURCE",
+                "ELSE",
+                "INSERT INTO MAS_EMPLOYEE_LINE_TOKEN (EMP_ID,TOKEN_ID,ACTIVE,CREATED_DATE,CREATED_BY,UPDATED_DATE,UPDATED_BY,SOURCE)",
+                "VALUES (@EMP_ID,@TOKEN_ID,@ACTIVE,CONVERT(varchar,dateadd(HOUR, 7, getdate()),21),@CREATED_BY,@UPDATED_DATE,@UPDATED_BY,@SOURCE)"
+            ]
+        },
+        {
+            "TopicName": "GetManagerProfile",
+            "Query": [
+                "SELECT ME.EMP_ID, ME.EMP_FULLNAME_TH, ME.POS_CODE, ME.POS_NAME_TH, MP.MINLVL, MP.MAXLVL",
+                "FROM MAS_EMPLOYEE ME",
+                "INNER JOIN MAS_EMPLOYEE_POS MP ON ME.POS_CODE = MP.POS_CODE",
+                "WHERE EMP_ID = @EMP_ID"
+            ]
+        },
+        {
+            "TopicName": "GetBranchProfile",
+            "Query": [
+                "SELECT DISTINCT MB.BRN_CODE, MB.BRN_NAME, MB.COMPANYCODE_LEVEL1, MB.COMPANYNAME_LEVEL1,",
+                "MB.COMPANYCODE_LEVEL4, MB.COMPANYNAME_LEVEL4, MB.COMPANYCODE_LEVEL2, MB.COMPANYNAME_LEVEL2,",
+                "SP.LEG_CODE, SP.PLANT, MB.LOC_CODE, MB.LOC_NAME",
+                "FROM MAS_BRANCH_PROFILE MB",
+                "INNER JOIN MAS_BRANCH_CODE_MAPPING MM ON MB.BRN_CODE = MM.ORG_CODEDEV ",
+                "INNER JOIN MAS_SAP_PLANT SP ON MM.ORG_CODE = SP.LEG_CODE",
+                "WHERE BRN_CODE = @BRN_CODE",
+                "OR COMPANYCODE_LEVEL7 = @BRN_CODE"
+            ]
+        },
+        {
+            "TopicName": "GetManagerSplitter",
+            "Query": [
+                "SELECT COUNT(1) AS TOTAL_MGR FROM MAS_EMPLOYEE_SPLITTER WHERE EMP_ID = @EMP_ID AND BRANCH_CODE = @BRN_CODE"
+            ]
+        },
+        {
+            "TopicName": "AddManager",
+            "Query": [
+                "INSERT INTO MAS_EMPLOYEE_SPLITTER (BRANCH_CODE,BRANCH_NAME,LEG_CODE,PLANT_CODE,EMP_ID,EMP_FULLNAME_TH,POS_CODE,POS_NAME_TH,MINLVL,MAXLVL,NUMLVL,COMPANYCODE_LEVEL1,COMPANYNAME_LEVEL1,COMPANYCODE_LEVEL4,COMPANYNAME_LEVEL4,LOC_CODE,LOC_NAME,COMPANYCODE_LEVEL2,COMPANYNAME_LEVEL2)",
+                "VALUES (@BRANCH_CODE,@BRANCH_NAME,@LEG_CODE,@PLANT_CODE,@EMP_ID,@EMP_FULLNAME_TH,@POS_CODE,@POS_NAME_TH,@MINLVL,@MAXLVL,@NUMLVL,@COMPANYCODE_LEVEL1,@COMPANYNAME_LEVEL1,@COMPANYCODE_LEVEL4,@COMPANYNAME_LEVEL4,@LOC_CODE,@LOC_NAME,@COMPANYCODE_LEVEL2,@COMPANYNAME_LEVEL2)"
+            ]
+        },
+        {
+            "TopicName": "AddUserDevice",
+            "Query": [
+                "IF EXISTS (SELECT * FROM MAS_EMPLOYEE_DEVICE WHERE EMP_ID = @EMP_ID AND BROWSER = @BROWSER AND SOURCE = @SOURCE)",
+                "UPDATE MAS_EMPLOYEE_DEVICE",
+                "SET BROWSER = @BROWSER,",
+                "BROWSER_VERSION = @BROWSER_VERSION,",
+                "DEVICE_NAME = @DEVICE_NAME,",
+                "DEVICE_TYPE = @DEVICE_TYPE,",
+                "OS_NAME = @OS_NAME,",
+                "OS_VERSION = @OS_VERSION,",
+                "SOURCE = @SOURCE,",
+                "UPDATED_DATE = CONVERT(varchar,dateadd(HOUR, 7, getdate()),21),",
+                "UPDATED_BY = @EMP_ID",
+                "WHERE EMP_ID = @EMP_ID AND BROWSER = @BROWSER AND SOURCE = @SOURCE",
+                "ELSE",
+                "INSERT INTO MAS_EMPLOYEE_DEVICE (EMP_ID, BROWSER, BROWSER_VERSION, DEVICE_NAME, DEVICE_TYPE, OS_NAME, OS_VERSION, SOURCE, CREATED_DATE, CREATED_BY)",
+                "VALUES (@EMP_ID, @BROWSER, @BROWSER_VERSION, @DEVICE_NAME, @DEVICE_TYPE, @OS_NAME, @OS_VERSION, @SOURCE, CONVERT(varchar,dateadd(HOUR, 7, getdate()),21), @CREATED_BY)"
+            ]
+        },
+        {
+            "TopicName": "addVendingMachine",
+            "Query": [
+                "INSERT INTO MAS_VENDING_MACHINE_TEMP (CODE_STATION,STATION_NAME,DISPENSER_NO,DISPENSER_BRAND,DISPENSER_MODEL,DISPENSER_SERIAL,DISPENSER_TYPE,SYSTEM_PUMP,HAND_PAY_SIDE,HAND_NUMBER,OIL_TYPE,GARUDA_STAMP_DAY,CERTIFICATION_EXP_DATE,CERTIFICATION_EXP_YEAR,CERTIFICATION_EXP_MONTH,HAND_BRAND,WORK_TIME,SURGE_PROTECTOR,REMARK,STATUS,CREATED_AT,CREATED_BY,UUID_CODE) VALUES (@CODE_STATION,@STATION_NAME,@DISPENSER_NO,@DISPENSER_BRAND,@DISPENSER_MODEL,@DISPENSER_SERIAL,@DISPENSER_TYPE,@SYSTEM_PUMP,@HAND_PAY_SIDE,@HAND_NUMBER,@OIL_TYPE,@GARUDA_STAMP_DAY,@CERTIFICATION_EXP_DATE,@CERTIFICATION_EXP_YEAR,@CERTIFICATION_EXP_MONTH,@HAND_BRAND,@WORK_TIME,@SURGE_PROTECTOR,@REMARK,@STATUS,CONVERT(varchar,dateadd(HOUR, 7, getdate()),21),@CREATED_BY,@UUID_CODE)"
+            ]
+        },
+        {
+            "TopicName": "addVendingMachineFile",
+            "Query": [
+                "INSERT INTO MAS_VENDING_MACHINE_FILE (id,FILE_NAME,FILE_TYPE,FILE_ROWS,FILE_STATUS,CREATED_AT,CREATED_BY,EMP_ID,IS_NOTIFICATION,IS_ACTIVE)",
+                "VALUES (@ID,@FILE_NAME,@FILE_TYPE,@FILE_ROWS,@FILE_STATUS,CONVERT(varchar,dateadd(HOUR, 7, getdate()),21),@EMP_ID,@EMP_ID,0,0)"
+            ]
+        },
+        {
+            "TopicName": "updateNotificationSocFile",
+            "Query": [
+                "UPDATE MAS_VENDING_MACHINE_FILE SET IS_ACTIVE = @IS_ACTIVE,",
+                "UPDATED_AT = CONVERT(varchar,dateadd(HOUR, 7, getdate()),21), UPDATED_BY = @EMP_ID",
+                "WHERE EMP_ID = @EMP_ID AND id = @ID"
+            ]
+        },
+        {
+            "TopicName": "listNotificationFile",
+            "Query": [
+                "WITH MES AS (",
+                "SELECT EMP_ID, SOCKET_ID FROM MAS_EMPLOYEE_SPLITTER WHERE EMP_ID = @EMP_ID",
+                "GROUP BY EMP_ID, SOCKET_ID",
+                ")",
+                "SELECT TOP(10) MVF.id, MVF.EMP_ID AS userId, FILE_NAME AS filename, MES.SOCKET_ID AS socId, FORMAT(UPDATED_AT, 'dd/MM/yyyy HH:mm') AS updatedAt",
+                "FROM MAS_VENDING_MACHINE_FILE MVF",
+                "INNER JOIN MES ON (MES.EMP_ID = MVF.EMP_ID)",
+                "WHERE MVF.EMP_ID = @EMP_ID AND IS_NOTIFICATION = 1 AND IS_ACTIVE = 0",
+                "AND FILE_STATUS = 'Success' AND UPDATED_AT IS NOT NULL AND DELETED_AT IS NULL",
+                "ORDER BY UPDATED_AT DESC"
+            ]
+        },
+        {
+            "TopicName": "updateMachineFile",
+            "Query": [
+                "UPDATE MAS_VENDING_MACHINE_FILE SET FILE_STATUS = @FILE_STATUS, IS_NOTIFICATION = @IS_NOTIFICATION,",
+                "UPDATED_AT = CONVERT(varchar,dateadd(HOUR, 7, getdate()),21), UPDATED_BY = @EMP_ID",
+                "WHERE EMP_ID = @EMP_ID AND id = @ID"
+            ]
+        },
+        {
+            "TopicName": "updateEmpSplitter",
+            "Query": [
+                "UPDATE MAS_EMPLOYEE_SPLITTER SET SOCKET_ID = @SOCKET_ID",
+                "WHERE EMP_ID = @EMP_ID"
+            ]
+        },
+        {
+            "TopicName": "GetTopMember",
+            "Query": [
+                "with best_seller as (",
+                "select CardNo, CustName, PhoneNo, convert(nvarchar(max), MonthKey, 112) as MonthKey, TopShopName, RankCustomer, ProductGrpName, ScaleCompareLM, FlagScale",
+                "from View_Crm_War_Pad",
+                "where TopOriBrnCode = @brnCode",
+                "),",
+                "set_besin as (",
+                "select * from best_seller where ProductGrpName = 'Bensin'",
+                "),",
+                "set_diesel as (",
+                "select * from best_seller where ProductGrpName = 'Diesel'",
+                "),",
+                "set_pivot as (",
+                "select CardNo, CustName, PhoneNo, TopShopName, RankCustomer, MonthKey,",
+                "isnull([Bensin], 0) as Bensin, isnull([Diesel], 0) as Diesel",
+                "from (",
+                "    select CardNo, CustName, PhoneNo, TopShopName, RankCustomer, MonthKey, ScaleCompareLM, ProductGrpName",
+                "    from best_seller",
+                ") as source_table",
+                "pivot (",
+                "avg(ScaleCompareLM)",
+                "for ProductGrpName in ([Bensin], [Diesel])",
+                ") as destination_table",
+                ")",
+                "select CardNo, CustName, PhoneNo, TopShopName, RankCustomer, NULL as MonthKey, NULL as Bensin, NULL as Diesel, 'H' as TypeData, count(CardNo) as CountData",
+                "from set_pivot",
+                "group by CardNo, CustName, PhoneNo, TopShopName, RankCustomer",
+                "union",
+                "select CardNo, CustName, PhoneNo, TopShopName, RankCustomer, MonthKey, Bensin, Diesel, 'D' as TypeData, 1 as CountData",
+                "from set_pivot",
+                "order by CustName, PhoneNo, RankCustomer, MonthKey"
+            ]
+        },
+        {
+            "TopicName": "GetLegCode",
+            "Query": [
+                "SELECT DISTINCT LEG_CODE FROM MAS_EMPLOYEE_SPLITTER WHERE BRANCH_CODE = @BRANCH_CODE"
+            ]
+        },
+        {
+            "TopicName": "GetManagerEmail",
+            "Query": [
+                "WITH SET_AREA_MGR AS (",
+                "SELECT DISTINCT HEAD1_ID AS EMP_ID",
+                "FROM MAS_BRANCH_PROFILE",
+                "WHERE BRN_CODE IN (SELECT BRANCH_CODE FROM MAS_EMPLOYEE_SPLITTER))",
+                "SELECT EMP_ID AS ManagerId, EMP_NAME_TH + ' ' + EMP_LASTNAME_TH AS Manager, EMP_EMAIL AS Email",
+                "FROM MAS_BRANCH_PROFILE",
+                "WHERE EMP_ID IN (",
+                "SELECT EMP_ID FROM SET_AREA_MGR)"
+            ]
+        },
+        {
+            "TopicName": "GetMasPerlicense90Day",
+            "Query": [
+                "WITH SET_BRN_AUTH AS (",
+                "SELECT DISTINCT SP.BRANCH_CODE AS BRN_CODE, AUTH_CODE, AUTH_EXPIRE,",
+                "DATEDIFF(DAY, CONVERT(VARCHAR, dateadd(HOUR, 7, GETDATE()), 112), AUTH_EXPIRE) AS DATE_DIFF,",
+                "CONVERT(VARCHAR, dateadd(DAY, -90, AUTH_EXPIRE), 112) AS BACK_DATE_90",
+                "FROM MAS_TASK_PER_LICENSE PL",
+                "INNER JOIN MAS_EMPLOYEE_SPLITTER SP ON PL.BRN_CODE = SP.LEG_CODE",
+                "WHERE AUTH_EXPIRE IS NOT NULL",
+                "AND ACTIVE = 1 )",
+                "SELECT BA.BRN_CODE AS brnCode, 'แจ้งผู้จัดการสถานี กรุณาต่อใบอนุญาต ' + MG.AUTH_NAME + ' ก่อนวันที่ '+",
+                "FORMAT(CONVERT(DATETIME,TRIM(BA.AUTH_EXPIRE),103), 'yyyy/MM/dd') AS taskTitle,",
+                "BACK_DATE_90 AS startDate, BA.AUTH_EXPIRE AS endDate",
+                "FROM SET_BRN_AUTH BA",
+                "INNER JOIN MAS_LOCAL_AUTH_GROUP MG ON BA.AUTH_CODE = MG.AUTH_CODE",
+                "WHERE DATE_DIFF = 90",
+                "ORDER BY BA.BRN_CODE"
+            ]
+        },
+        {
+            "TopicName": "GetMasFuelDispenser",
+            "Query": [
+                "WITH SET_BRN_DISP AS (",
+                "SELECT DISTINCT TF.BRN_CODE, TF.FUEL_DIS_MODEL, ",
+                "TF.FUEL_DIS_NAME, TF.FUEL_DIS_NO, PE.EXPIRED_DATE,",
+                "DATEDIFF(DAY, CONVERT(VARCHAR, dateadd(HOUR, 7, GETDATE()), 112), PE.EXPIRED_DATE) AS DATE_DIFF",
+                "FROM TRN_TASK_FUEL_DISPENSER TF",
+                "INNER JOIN TRN_TASK_PUMP_NOZZLE PE ON TF.FUEL_DIS_ID = PE.FUEL_DIS_ID",
+                "AND TF.ACTIVE = 1 )",
+                "SELECT BRN_CODE AS brnCode,",
+                "'แจ้งผู้จัดการสถานี กรุณาทำรายการต่ออายุตู้จ่ายยี่ห้อ ' + FUEL_DIS_NAME +",
+                "' รุ่น ' + FUEL_DIS_MODEL + ' ลำดับที่ ' + CONVERT(VARCHAR, FUEL_DIS_NO) + ' ในระบบ Smart Fix ก่อนวันที่ '+",
+                "FORMAT(CONVERT(DATETIME,TRIM(EXPIRED_DATE),103), 'yyyy/MM/dd') AS taskTitle,",
+                "CONVERT(VARCHAR, dateadd(HOUR, 7, GETDATE()), 112) AS startDate, EXPIRED_DATE AS endDate",
+                "FROM SET_BRN_DISP",
+                "WHERE DATE_DIFF = :DAY_DIFF"
+            ]
+        },
+        {
+            "TopicName":"GetManagerAllM1M2",
+            "Query":[
+              "WITH MANAGER_TYPE AS (",
+                "SELECT value AS  COMP_CODE",
+                "FROM STRING_SPLIT('102,103,104', ',')",
+              "), MANAGET_ALL AS (",
+                "SELECT DISTINCT MBP.COMPANYCODE_LEVEL7 AS COMP_CODE, MBP.COMPANYNAME_LEVEL7 AS COMP_NAME, MBP.COMPANYCODE_LEVEL1 AS BU_TYPE, 'BRANCH_MANAGER' AS POS_TYPE",
+                "FROM MAS_EMPLOYEE_SPLITTER AS MS",
+                "INNER JOIN MAS_BRANCH_PROFILE AS MBP ON MBP.BRN_CODE = MS.BRANCH_CODE",
+                "INNER JOIN MANAGER_TYPE AS MT ON MT.COMP_CODE = MBP.COMPANYCODE_LEVEL1",
+                "UNION",
+                "SELECT DISTINCT MBP.COMPANYCODE_LEVEL7 AS COMP_CODE, MBP.COMPANYNAME_LEVEL7 AS COMP_NAME, MBP.COMPANYCODE_LEVEL1 AS BU_TYPE, 'BRANCH_MANAGER' AS POS_TYPE",
+                "FROM MAS_EMPLOYEE_SPLITTER AS MS",
+                "INNER JOIN MAS_BRANCH_PROFILE AS MBP ON MBP.BRN_CODE = MS.BRANCH_CODE",
+                "INNER JOIN MANAGER_TYPE AS MT ON MT.COMP_CODE = MBP.COMPANYCODE_LEVEL4",
+                "UNION",
+                "SELECT DISTINCT MBP.COMPANYCODE_LEVEL7 AS COMP_CODE, MBP.COMPANYNAME_LEVEL7 AS COMP_NAME, MBP.COMPANYCODE_LEVEL1 AS BU_TYPE, 'BRANCH_MANAGER' AS POS_TYPE",
+                "FROM MAS_EMPLOYEE_SPLITTER AS MS",
+                "INNER JOIN MAS_BRANCH_PROFILE AS MBP ON MBP.BRN_CODE = MS.BRANCH_CODE",
+                "INNER JOIN MANAGER_TYPE AS MT ON MT.COMP_CODE = MBP.COMPANYCODE_LEVEL6",
+              ")",
+              "select  *",
+              "FROM MANAGET_ALL",
+              "WHERE COMP_CODE IS NOT NULL AND",
+              "COMP_CODE LIKE @KEYWORD OR COMP_NAME LIKE @KEYWORD",
+              "ORDER BY 1 OFFSET (@PAGE_NO - 1) * @LIMIT ROWS FETCH NEXT @LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName":"GetManagerAllM1M2Total",
+            "Query":[
+              "WITH MANAGER_TYPE AS (",
+                "SELECT value AS  COMP_CODE",
+                "FROM STRING_SPLIT('102,103,104', ',')",
+              "), MANAGET_ALL AS (",
+                "SELECT DISTINCT MBP.COMPANYCODE_LEVEL7 AS COMP_CODE, MBP.COMPANYNAME_LEVEL7 AS COMP_NAME, 'BRANCH_MANAGER' AS POS_TYPE",
+                "FROM MAS_EMPLOYEE_SPLITTER AS MS",
+                "INNER JOIN MAS_BRANCH_PROFILE AS MBP ON MBP.BRN_CODE = MS.BRANCH_CODE",
+                "INNER JOIN MANAGER_TYPE AS MT ON MT.COMP_CODE = MBP.COMPANYCODE_LEVEL1",
+                "UNION",
+                "SELECT DISTINCT MBP.COMPANYCODE_LEVEL7 AS COMP_CODE, MBP.COMPANYNAME_LEVEL7 AS COMP_NAME, 'BRANCH_MANAGER' AS POS_TYPE",
+                "FROM MAS_EMPLOYEE_SPLITTER AS MS",
+                "INNER JOIN MAS_BRANCH_PROFILE AS MBP ON MBP.BRN_CODE = MS.BRANCH_CODE",
+                "INNER JOIN MANAGER_TYPE AS MT ON MT.COMP_CODE = MBP.COMPANYCODE_LEVEL4",
+                "UNION",
+                "SELECT DISTINCT MBP.COMPANYCODE_LEVEL7 AS COMP_CODE, MBP.COMPANYNAME_LEVEL7 AS COMP_NAME, 'BRANCH_MANAGER' AS POS_TYPE",
+                "FROM MAS_EMPLOYEE_SPLITTER AS MS",
+                "INNER JOIN MAS_BRANCH_PROFILE AS MBP ON MBP.BRN_CODE = MS.BRANCH_CODE",
+                "INNER JOIN MANAGER_TYPE AS MT ON MT.COMP_CODE = MBP.COMPANYCODE_LEVEL6",
+              ")",
+              "select COUNT(1) AS Total",
+              "FROM MANAGET_ALL",
+              "WHERE COMP_CODE IS NOT NULL AND",
+              "COMP_CODE LIKE @KEYWORD OR COMP_NAME LIKE @KEYWORD"
+            ]
+        },
+        {
+            "TopicName":"GetManagerAll",
+            "Query":[
+              "WITH MANAGER_ALL AS (",
+                "SELECT DISTINCT BRN_CODE AS COMP_CODE, BRN_NAME AS COMP_NAME, COMPANYCODE_LEVEL1 AS BU_TYPE,  'BRANCH_MANAGER' AS POS_TYPE",
+                "FROM MAS_BRANCH_PROFILE ",
+                "WHERE COMPANYCODE_LEVEL5 in (",
+                "SELECT BRN_CODE FROM MAS_BRANCH_MAPPING",
+                "where EMP_ID = @USER_ID",
+                ") AND BRN_CODE IS  NOT NULL",
+                "UNION",
+                "SELECT DISTINCT BRN_CODE AS COMP_CODE, BRN_NAME AS COMP_NAME , COMPANYCODE_LEVEL1 AS BU_TYPE,  'BRANCH_MANAGER' AS POS_TYPE",
+                "FROM MAS_BRANCH_PROFILE ",
+                "WHERE COMPANYCODE_LEVEL6 in (",
+                "SELECT BRN_CODE FROM MAS_BRANCH_MAPPING",
+                "where EMP_ID = @USER_ID",
+                ") AND BRN_CODE IS  NOT NULL",
+                "UNION",
+                "SELECT DISTINCT BRN_CODE AS COMP_CODE, BRN_NAME AS COMP_NAME , MBP.COMPANYCODE_LEVEL1 AS BU_TYPE,  'BRANCH_MANAGER' AS POS_TYPE",
+                "FROM MAS_BRANCH_PROFILE AS MBP",
+                "INNER JOIN MAS_EMPLOYEE_SPLITTER AS MEP ON MBP.BRN_CODE = MEP.BRANCH_CODE",
+                "WHERE MBP.COMPANYCODE_LEVEL4 in (",
+                "SELECT BRN_CODE FROM MAS_BRANCH_MAPPING",
+                "WHERE EMP_ID = @USER_ID",
+                ") AND BRN_CODE IS  NOT NULL",
+              ")",
+              "SELECT *",
+              "FROM MANAGER_ALL",
+              "ORDER BY 1 OFFSET (@PAGE_NO - 1) * @LIMIT ROWS FETCH NEXT @LIMIT ROWS ONLY"
+            ]
+        },
+        {
+            "TopicName":"GetManagerAllTotal",
+            "Query":[
+              "WITH MANAGER_ALL AS (",
+                "SELECT DISTINCT BRN_CODE AS COMP_CODE, BRN_NAME AS COMP_NAME,  'BRANCH_MANAGER' AS POS_TYPE",
+                "FROM MAS_BRANCH_PROFILE ",
+                "WHERE COMPANYCODE_LEVEL5 in (",
+                "SELECT BRN_CODE FROM MAS_BRANCH_MAPPING",
+                "where EMP_ID = @USER_ID",
+                ") AND BRN_CODE IS  NOT NULL",
+                "UNION",
+                "SELECT DISTINCT BRN_CODE AS COMP_CODE, BRN_NAME AS COMP_NAME ,  'BRANCH_MANAGER' AS POS_TYPE",
+                "FROM MAS_BRANCH_PROFILE ",
+                "WHERE COMPANYCODE_LEVEL6 in (",
+                "SELECT BRN_CODE FROM MAS_BRANCH_MAPPING",
+                "where EMP_ID = @USER_ID",
+                ") AND BRN_CODE IS  NOT NULL",
+                "UNION",
+                "SELECT DISTINCT BRN_CODE AS COMP_CODE, BRN_NAME AS COMP_NAME ,  'BRANCH_MANAGER' AS POS_TYPE",
+                "FROM MAS_BRANCH_PROFILE AS MBP",
+                "INNER JOIN MAS_EMPLOYEE_SPLITTER AS MEP ON MBP.BRN_CODE = MEP.BRANCH_CODE",
+                "WHERE MBP.COMPANYCODE_LEVEL4 in (",
+                "SELECT BRN_CODE FROM MAS_BRANCH_MAPPING",
+                "WHERE EMP_ID = @USER_ID",
+                ") AND BRN_CODE IS  NOT NULL",
+              ")",
+              "SELECT COUNT(1) AS Total",
+              "FROM MANAGER_ALL"
+            ]
+        }
+    ]
+}

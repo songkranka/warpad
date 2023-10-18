@@ -1,0 +1,14 @@
+Api for manage table and provide master data for other api
+=============================
+MAS_BRANCH
+MAS_BRANCH_ACTIVE
+MAS_EMPLOYEE
+MAS_EMPLOYEE_POS
+MAS_EMPLOYEE_ROLE
+MAS_MENU
+MAS_MENU_ROLE
+MAS_SLA_CONFIG
+MAS_TASK_ACTION
+MAS_TASK_CATEGORY
+MAS_TASK_TYPE
+

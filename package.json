@@ -1,0 +1,52 @@
+{
+  "name": "example-swagger-autogen",
+  "version": "1.0.0",
+  "description": "Example showing the use of the swagger-autogen module.",
+  "main": "index.js",
+  "readmeFilename": "README.md",
+  "private": false,
+  "keywords": [
+    "swagger",
+    "autogen",
+    "example"
+  ],
+  "author": {
+    "name": "Davi D. Baltar",
+    "email": "davibaltar.npm@gmail.com"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/davibaltar/example-swagger-autogen.git"
+  },
+  "scripts": {
+    "start": "node index.js",
+    "start-gendoc": "node swagger.js",
+    "start-gendoc:prod": "NODE_ENV=production node swagger.js",
+    "start-gendoc:staging": "NODE_ENV=staging node swagger.js",
+    "start-gendoc:dev": "NODE_ENV=development node swagger.js"
+  },
+  "dependencies": {
+    "axios": "^0.26.1",
+    "cors": "^2.8.5",
+    "crypto-js": "^4.1.1",
+    "dayjs": "^1.11.0",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "javascript-stringify": "^2.1.0",
+    "linq": "^3.2.4",
+    "lodash": "^4.17.21",
+    "log4js": "^6.3.0",
+    "mssql": "^7.2.1",
+    "qs": "^6.10.3",
+    "request": "^2.88.2",
+    "sequelize": "^6.21.0",
+    "socket.io": "^4.4.1",
+    "swagger-autogen": "2.11.1",
+    "swagger-ui-express": "4.1.4",
+    "tedious": "^14.6.0",
+    "web-push": "^3.4.5",
+    "xml2js": "^0.4.23",
+    "jsonwebtoken": "^8.5.1"
+  }
+}

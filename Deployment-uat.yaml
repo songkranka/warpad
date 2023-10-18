@@ -1,0 +1,122 @@
+kind: Deployment
+apiVersion: apps/v1
+metadata:
+  name: station-warpad-masterdata-api
+  namespace: station-warpad-uat
+spec:
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 1
+  revisionHistoryLimit: 2
+  selector:
+    matchLabels:
+      app: station-warpad-masterdata-api
+  template:
+    metadata:
+      labels:
+        app: station-warpad-masterdata-api
+    spec:
+      containers:
+        - name: station-warpad-masterdata-api
+          image: IMAGE_NAME
+          volumeMounts:
+          - name: azurefileshare
+            mountPath: /usr/src/app/logs
+          - name: message-config-volume
+            mountPath: /usr/src/app/appConfigs/message
+          - name: query-config-volume
+            mountPath: /usr/src/app/appConfigs/query
+          - name: mapper-config-volume
+            mountPath: /usr/src/app/appConfigs/mapper
+          - name: backend-config-volume
+            mountPath: /usr/src/app/appConfigs/backend
+          env:
+          - name: BASE_URL
+            valueFrom:
+              secretKeyRef:
+                name: web-api-credentials
+                key: masterdata_api
+          - name: DB_ENDPOINT
+            valueFrom:
+              secretKeyRef:
+                name: database-credentials
+                key: db_endpoint
+          - name: DB_USER
+            valueFrom:
+              secretKeyRef:
+                name: database-credentials
+                key: db_user
+          - name: DB_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: database-credentials
+                key: db_password
+          - name: DB_NAME
+            valueFrom:
+              secretKeyRef:
+                name: database-credentials
+                key: db_name
+          - name: DB_PORT
+            value: "1433"
+          - name: DB_MINPOOL
+            value: "0"
+          - name: DB_MAXPOOL
+            value: "30"
+          - name: DB_IDLETIME
+            value: "30000"
+          - name: PORT_APP
+            value: "80"
+          - name: VERSION
+            value: "station-warpad-masterdata-api:D01.01.0100"  
+          - name: PATH_CONFIG_MAP
+            valueFrom:
+              secretKeyRef:
+                name: configmap-credentials
+                key: path_config_map  
+          - name: API_MAPPER_CONFIG
+            valueFrom:
+              secretKeyRef:
+                name: configmap-credentials
+                key: api_mapper_config  
+          - name: WEB_URL_CONFIG
+            valueFrom:
+              secretKeyRef:
+                name: configmap-credentials
+                key: web_url_config  
+          - name: MESSAGE_CONFIG
+            valueFrom:
+              secretKeyRef:
+                name: configmap-credentials
+                key: message_config  
+          - name: API_QUERY_CONFIG
+            valueFrom:
+              secretKeyRef:
+                name: configmap-credentials
+                key: api_query_config   
+          - name: TZ
+            value: "Asia/Bangkok"                 
+          imagePullPolicy: Always
+      restartPolicy: Always
+      imagePullSecrets:
+        - name: station-warpad-registry-secret
+      volumes:
+        - name: azurefileshare
+          azureFile:
+            secretName: storage-credentials
+            shareName: api-uat
+            readOnly: false
+        - name: message-config-volume
+          configMap:
+            name: message-configmap-configs
+        - name: query-config-volume
+          configMap:
+            name: query-configmap-configs
+        - name: mapper-config-volume
+          configMap:
+            name: mapper-configmap-configs
+        - name: backend-config-volume
+          configMap:
+            name: backend-configmap-configs

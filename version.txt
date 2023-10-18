@@ -1,0 +1,4 @@
+#date - version : Reason
+2021-09-02 - D01.01.0100 : Initial for Api
+2021-11-11 - D01.02.0100 : Feature Sale On Mobile
+2022-01-13 - D01.03.0100 : For Pilot 3 , VRM, Line Notify
